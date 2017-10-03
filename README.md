@@ -1,1 +1,0 @@
-# Practical_Cryptographic_System
