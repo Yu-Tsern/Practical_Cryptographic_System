@@ -7,55 +7,25 @@ import(
     "unicode/utf8"
     "unicode"
     "strconv"
+    "os"
 //    "time"
 )
 func main(){
 
 //  input of command line
-    var agrv[3] string
-    fmt.Scanln(&agrv[0], &agrv[1], &agrv[2])
-    switch agrv[0]{
-    case "vigenere-encrypt":
-        text:=ReadPlaintext(&agrv[2])
-        key:=KeyExpansion( len(text), &agrv[1])
-        Encrypt( &key, &text)
-        WriteText("ciphertext.txt", &text)
 
-    case "vigenere-decrypt":
-        text:=ReadCiphertext(&agrv[2])
-        key:=KeyExpansion( len(text), &agrv[1])
-        Decrypt( &key, &text)
-        WriteText("recovered plaintext.txt", &text)
+    agrv := os.Args
+    //var agrv[3] string
+    //fmt.Scanln(&agrv[0], &agrv[1], &agrv[2])
 
-    case "vigenere-keylength":
-        var words[4][3] rune
-        var words_f[4] int
-        var key []byte
-        var separatedtext [][]byte
-        const lowerbound=11
-        const upperbound=21
-        text:=ReadCiphertext(&agrv[1])
-        Find3Letters (&text, &words_f, &words)
-        keylengths:=make( []int, upperbound, upperbound)
-        FactorizeDistances( &words_f, lowerbound, upperbound, &words, &text, &keylengths)
-        pkl:=make([]int, 2, 2)
-        pkl[0] ,pkl[1]=GuessKeylength(&keylengths)
-        key_l_final:=ICVariance(&pkl, &text)
-        BuildSeparated( &separatedtext, &text, key_l_final)
-        RecoverKey( &separatedtext, &key)
-        CheckRepeated(&key)
-        fmt.Println(string(key))
-
-    case "vigenere-cryptanalyze":
         text:=ReadCiphertext(&agrv[1])
         var separatedtext [][]byte
         keylength:=ReadKeylength(&agrv[2])
         BuildSeparated( &separatedtext, &text, keylength)
         var key []byte
         RecoverKey( &separatedtext, &key)
-        fmt.Println(string(key))
+        fmt.Print(string(key))
 
-    }
 }
 
 func ReadPlaintext( argument *string) []byte{

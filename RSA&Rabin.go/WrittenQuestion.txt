@@ -1,0 +1,18 @@
+Problem 4: Written Questions (10 points) 
+
+Problem 1
+This is an open problem. Statement (1) is true since an adversary can compute Euler totient function of N, phi(N), by factoring N, thus being able to derive secret key ,d , inverse of public key e in multiplicative group of integers modulo phi(N), Z/phi(N)Z. From this point of view, an adversary with an efficient factoring algorithm can solve many RSA problems. Factoring problem seems to be harder or equivalent to RSA problem. On the other hand, No one has proved statement (2) yet. As far as I know, Dan Boneh has shown that if breaking low exponent RSA implies an efficient factoring algorithm, this implication can be converted into an efficient factoring algorithm. Since most of the people believe factoring problem is hard, they should believe LE-RSA is easier than factoring problem. Combine these two statements, we conclude that RSA problem is probably easier than factoring problem.
+
+Problem 2
+If the inverter of the Rabin function generates m’ such that m’ does not equals to positive or negative m, and m’^2 congruence with m^2 mod N, we can compute a non-trivial factor, gcd(m’-m, N), of N. Therefore, inverting Rabin function implies an efficient factoring algorithm. On the other hand, as long as the adversary can factor N, he can derive secret key p, q, and decrypt message m. In conclusion, the hardness of inverting a Rabin function is identical to factoring problem. 
+
+Problem 3
+As long as their messages are all different, and no other person will send messages to them, this scheme is still secure. However, if people wants to send messages to Alice and Bob, and an adversary intercept two cipher texts that are identical and are encrypted by public keys from Alice and Bob, respectively, he can decrypt it with high probability. In addition, since Bob can derive d_A from d_A, e_B, e_d, N, if there is anyone who wants to send messages only to Alice, he cannot encrypt his message with Alice’s public key since Bob can also decrypt it. 
+
+Problem 4
+If there’s no redundancy in this scheme, the adversary can give the challenger c=m^2 with a random generated m, and factors N if he gets m’ not equals to negative or positive m, just like our discussion above. 
+
+Problem 5
+Use OAEP, OAEP+, SAEP+ to add randomness to the scheme. 
+
+

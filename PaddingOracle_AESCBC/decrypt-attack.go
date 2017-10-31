@@ -5,74 +5,116 @@ import(
     "unicode/utf8"
     "unicode"
     "crypto/cipher"
-    "log"
     "strconv"
-    "bytes"
     "bufio"
     "flag"
+    "encoding/hex"
 */
     "crypto/aes"
     "crypto/rand"
     "crypto/sha256"
-    "encoding/hex"
     "fmt"
     "os"
     "io/ioutil"
+    "log"
+    "bytes"
+    "os/exec"
 )
-
 func main(){
 
 
     // read command line and parse
-    //reader := bufio.NewReader(os.Stdin)
-    //agrv, _ := reader.ReadBytes('\n')
-    //agrv_s := bytes.Split(agrv, []byte(" "))
     agrv_s := os.Args
-    // parse keys
-    dst := make([]byte, hex.DecodedLen(len(agrv_s[3])))
-    hex.Decode(dst, []byte(agrv_s[3]))
-    k_enc := dst[:len(dst)/2]
-    k_mac := dst[len(dst)/2:]
-    //  read file
-    text, err := ioutil.ReadFile((agrv_s[5]))
+    text, err := ioutil.ReadFile((agrv_s[2]))
     if err != nil {
         panic(err)
     }
-    // encryption & decryptionn
-    if(agrv_s[1]=="encrypt"){
-        T:=HMAC(k_mac, text)
-        M_2:=PADDING(text, T)
-        IV:=GEN_IV(16)
-        //fmt.Println(IV)
-        output:=AES_ENC(M_2, IV, k_enc)
-        Append(&IV, &output)
-        WriteText(agrv_s[7], &IV)
-
-    }else if((agrv_s[1])==("decrypt")){
-        IV:=text[:16]
-        text=text[16:]
-        output:=AES_DEC(text, IV, k_enc)
-        if(!PADDING_CHECK(&output)){
-            return
+    output:=make([]byte, len(text))
+    //var output []byte
+    for len(text)>16 {
+        temp:=lastblockattack(text)
+        //fmt.Println(temp)
+        for i:=0; i<16; i++ {
+            output[len(text)-16+i]=temp[i]
         }
-        T_2:=output[len(output)-32:]
-        output=output[:len(output)-32]
-        if(!MAC_CHECK(k_mac, output, T_2)){
-            return
-        }
-        WriteText( agrv_s[7], &output)
+        text=text[:len(text)-16]
     }
-    //fmt.Println("plain text : ", plaintext)
-    //fmt.Println(k_enc, k_mac)
-    //fmt.Println("M_2 = ", M_2)
-    // set IV
-    //fmt.Println("IV = ", IV)
-    //fmt.Println("encrypted ", output)
+    //fmt.Println(output)
+    if(!PADDING_CHECK(&output)){
+        return
+    }
+    if(len(output)<33){
+        fmt.Print("INVALID MAC")
+        return
+    }
+    output=output[:len(output)-32]
+    output=output[16:]
+    fmt.Print(string(output))
+}
 
-    //fmt.Println("decrypted ", output)
-    //fmt.Println(ck)
-    //fmt.Println("depad ", output)
+func lastblockattack(text []byte) []byte{
+    //fmt.Println("text= ", text)
+    var duplic=make([]byte, len(text))
+    var output=make([]byte, 16) // only 16 bytes in a block
+    var aesout=make([]byte, 16) // only 16 bytes in a block
+    var counter byte
+    copy(duplic, text)
+    filename:="blockattack.txt"
+    duplic[len(duplic)-17]++
+    WriteText(filename, &duplic)
+    duplic[len(duplic)-17]--
+    for i:=1; i<17; i++ { // the first 16 byte is IV
+        //if(i==3){ break}
+        counter=0x01
+        //a:=test(filename)
+        //fmt.Println(len(a))
+        //fmt.Println(test(filename)=="INVALID PADDING\n")
+        for test(filename)=="INVALID PADDING" {
+            counter++
+            inc1byte(filename, len(text)-i-16)
+        }
+        //fmt.Println("counter ", counter)
+        //fmt.Println("byte(i) ", byte(i))
+        //fmt.Println("text[len(text)-i-16] ", text[len(text)-i-16])
+        //fmt.Println("text[len(text)-i-16]+counter ", text[len(text)-i-16]+counter)
+        aesout[16-i]=byte(i)^(text[len(text)-i-16]+counter)
+        output[16-i]=aesout[16-i]^(text[len(text)-i-16])
+        //fmt.Println(output[16-i])
+        for j:=1; j<i+1; j++ {
+            duplic[len(duplic)-16-j]=aesout[16-j]^byte(i+1)
+        }
+        if(i!=16){
+            duplic[len(duplic)-i-17]++
+        }
+        //fmt.Println("duplic= ", duplic)
+        //fmt.Println("text= ", text)
+        WriteText(filename, &duplic)
+    }
+    return output
+}
 
+
+func inc1byte(filename string, index int){
+    text, err := ioutil.ReadFile((filename))
+    if err != nil {
+        panic(err)
+    }
+    text[index]++
+    WriteText(filename, &text)
+}
+
+func test(filename string) string{
+    name := "./decrypt-test"
+    cmd := exec.Command(name, "-i", filename)
+    var stdout, stderr bytes.Buffer
+    cmd.Stdout = &stdout
+    cmd.Stderr = &stderr
+    err := cmd.Run()
+    if err != nil {
+        log.Fatalf("cmd.Run() failed with %s\n", err)
+    }
+    outStr := string(stdout.Bytes())
+    return outStr
 }
 
 func Append( a *[]byte, b *[]byte){

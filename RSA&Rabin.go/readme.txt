@@ -1,0 +1,2 @@
+Problem 2
+What I did to ensure the uniqueness of Rabin decryption is to pad the message with it’s first ten digits. If the length of the message is shorter than 10 digits, I duplicate it. Since the messages are limited to 800 bits long, padding 10 digits, which is less than 100 bits, will not leads to overflow. All messages concatenated with its padding are still unique. Two examples are shown as follows. Example 1, When m = 27182818285, it is padded with its first ten digits, that is m’ = 27182818285 || 2718281828. Example 2, When m = 31415926, m’ = 31415926 || 31415926.
